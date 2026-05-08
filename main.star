@@ -993,25 +993,25 @@ def run(plan, args={}):
                 args_with_right_defaults.additional_services,
             )
             plan.print("Successfully launched slashoor")
-        elif additional_service == "zkboost":
-            plan.print("Launching zkboost")
-            zkboost_config_template = read_file(
-                static_files.ZKBOOST_CONFIG_TEMPLATE_FILEPATH
-            )
-            zkboost_metrics_jobs = zkboost.launch_zkboost(
-                plan,
-                zkboost_config_template,
-                all_participants,
-                args_with_right_defaults.zkboost_params,
-                global_node_selectors,
-                global_tolerations,
-                args_with_right_defaults.port_publisher,
-                index,
-                args_with_right_defaults.docker_cache_params,
-                tempo_otlp_grpc_url,
-            )
-            prometheus_additional_metrics_jobs.extend(zkboost_metrics_jobs)
-            plan.print("Successfully launched zkboost")
+        # elif additional_service == "zkboost":
+        #     plan.print("Launching zkboost")
+        #     zkboost_config_template = read_file(
+        #         static_files.ZKBOOST_CONFIG_TEMPLATE_FILEPATH
+        #     )
+        #     zkboost_metrics_jobs = zkboost.launch_zkboost(
+        #         plan,
+        #         zkboost_config_template,
+        #         all_participants,
+        #         args_with_right_defaults.zkboost_params,
+        #         global_node_selectors,
+        #         global_tolerations,
+        #         args_with_right_defaults.port_publisher,
+        #         index,
+        #         args_with_right_defaults.docker_cache_params,
+        #         tempo_otlp_grpc_url,
+        #     )
+        #     prometheus_additional_metrics_jobs.extend(zkboost_metrics_jobs)
+        #     plan.print("Successfully launched zkboost")
         else:
             fail("Invalid additional service %s" % (additional_service))
     if launch_prometheus_grafana:
