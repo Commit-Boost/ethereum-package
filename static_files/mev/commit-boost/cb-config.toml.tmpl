@@ -10,6 +10,11 @@ id = "mev_relay_{{$index}}"
 url = "{{ $relay }}"
 {{- end }}
 
+[metrics]
+enabled = true
+host = "0.0.0.0"
+start_port = 9090
+
 [logs.stdout]
 level = "debug"
 

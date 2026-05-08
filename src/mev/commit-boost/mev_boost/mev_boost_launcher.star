@@ -13,7 +13,12 @@ USED_PORTS = {
         constants.MEV_BOOST_PORT,
         shared_utils.TCP_PROTOCOL,
         wait="15s",
-    )
+    ),
+    "metrics": shared_utils.new_port_spec(
+        9090,
+        shared_utils.TCP_PROTOCOL,
+        wait="15s",
+    ),
 }
 
 # The min/max CPU/memory that mev-boost can use
@@ -118,6 +123,7 @@ def get_config(
         cmd=[],
         env_vars={
             "CB_CONFIG": config_file_path,
+            "CB_METRICS_PORT": "9090",
         },
         files={
             CB_CONFIG_MOUNT_DIRPATH_ON_SERVICE: config_file,

@@ -568,6 +568,22 @@ def run(plan, args={}):
                     )
                 all_mevboost_contexts.append(mev_boost_context)
 
+    # Add commit-boost metrics scrape jobs for prometheus
+    if mev_components != None and mev_components.sidecar == "commit-boost":
+        for idx, ctx in enumerate(all_mevboost_contexts):
+            prometheus_additional_metrics_jobs.append(
+                prometheus.new_metrics_job(
+                    job_name="commit-boost-{0}".format(idx),
+                    endpoint="{0}:9090".format(ctx.private_ip_address),
+                    metrics_path="/metrics",
+                    labels={
+                        "service": "commit-boost",
+                        "participant": str(idx),
+                    },
+                    scrape_interval="15s",
+                )
+            )
+
     if len(args_with_right_defaults.additional_services) == 0:
         output = struct(
             all_participants=all_participants,
