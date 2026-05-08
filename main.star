@@ -65,7 +65,8 @@ get_prefunded_accounts = import_module(
 )
 spamoor = import_module("./src/spamoor/spamoor.star")
 slashoor = import_module("./src/slashoor/slashoor_launcher.star")
-zkboost = import_module("./src/zkboost/zkboost_launcher.star")
+# zkboost disabled: GpuConfig undefined in upstream
+# zkboost = import_module("./src/zkboost/zkboost_launcher.star")
 
 GRAFANA_USER = "admin"
 GRAFANA_PASSWORD = "admin"
