@@ -127,6 +127,9 @@ def launch_helix_relay(
         "RELAY_KEY": constants.DEFAULT_MEV_SECRET_KEY,
         "POSTGRES_PASSWORD": "postgres",
         "ADMIN_TOKEN": "admin_token",
+        # Latest helix panics in HousekeeperTile::new -> current_slot().unwrap() if it
+        # starts before genesis. Pass genesis time so the wrapper below waits for it.
+        "GENESIS_TIME": str(genesis_timestamp),
     }
 
     # Use provided relay_image if available, otherwise use mev_params.helix_relay_image
@@ -136,7 +139,15 @@ def launch_helix_relay(
         name=HELIX_RELAY_NAME,
         config=ServiceConfig(
             image=helix_image,
-            cmd=["--config", config_file_path],
+            # Wait until genesis before launching helix: latest :main helix computes
+            # current_slot() at boot (HousekeeperTile::new) and unwraps None pre-genesis.
+            # sh + date exist in the image; exec preserves PID 1 / signal handling.
+            entrypoint=["sh", "-c"],
+            cmd=[
+                'until [ "$(date +%s)" -ge "$GENESIS_TIME" ]; do sleep 1; done; '
+                + "exec /app/helix-relay --config "
+                + config_file_path,
+            ],
             files={
                 HELIX_RELAY_MOUNT_DIRPATH_ON_SERVICE: config_files_artifact_name,
                 constants.GENESIS_DATA_MOUNTPOINT_ON_CLIENTS: el_cl_genesis_data,
