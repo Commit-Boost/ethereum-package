@@ -35,7 +35,7 @@ USED_PORTS = {
 RELAY_MIN_CPU = 500
 RELAY_MAX_CPU = 3000
 RELAY_MIN_MEMORY = 256
-RELAY_MAX_MEMORY = 4096
+RELAY_MAX_MEMORY = 8192  # raised from 4096: both relays OOM-killed at their 4GB cgroup cap ~9min into a spamoor devnet (CONSTRAINT_MEMCG)
 
 # The min/max CPU/memory that postgres can use
 POSTGRES_MIN_CPU = 10
@@ -76,7 +76,7 @@ def launch_helix_relay(
         password="postgres",
         user="postgres",
         database="postgres",
-        service_name="helix-relay-postgres",
+        service_name="helix-relay-postgres-{}".format(index),
         image="timescale/timescaledb:latest-pg15",
         persistent=persistent,
         launch_adminer=mev_params.launch_adminer,
@@ -115,7 +115,8 @@ def launch_helix_relay(
 
     # Render the configuration file
     config_files_artifact_name = plan.render_templates(
-        template_and_data_by_rel_dest_filepath, HELIX_RELAY_FILES_ARTIFACT_NAME
+        template_and_data_by_rel_dest_filepath,
+        "{}-{}".format(HELIX_RELAY_FILES_ARTIFACT_NAME, index),
     )
 
     # Path where config file will be mounted in container
@@ -136,7 +137,7 @@ def launch_helix_relay(
     helix_image = relay_image if relay_image else mev_params.helix_relay_image
 
     endpoint = plan.add_service(
-        name=HELIX_RELAY_NAME,
+        name="{}-{}".format(HELIX_RELAY_NAME, index),
         config=ServiceConfig(
             image=helix_image,
             # Wait until genesis before launching helix: latest :main helix computes

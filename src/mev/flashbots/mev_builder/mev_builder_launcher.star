@@ -44,6 +44,7 @@ def new_builder_config(
         num_of_participants,
         mev_params.mev_builder_subsidy,
         relay_list,
+        len(participants),
     )
     flashbots_builder_config_template = read_file(
         static_files.FLASHBOTS_RBUILDER_CONFIG_FILEPATH
@@ -79,15 +80,25 @@ def new_builder_config_template_data(
     num_of_participants,
     subsidy,
     relay_list,
+    participant_count,
 ):
     """
     Build template data using the resolved relay list directly.
 
     Args:
-        relay_list: List of relay name strings (e.g., ["flashbots", "helix"])
+        relay_list: List of relay name strings (e.g., ["helix", "helix"])
+        participant_count: Raw participant count (int). main.star launches each
+            relay service with index = participant_count + relay_index (its
+            per-instance suffix), so the helix Service names below MUST use the
+            SAME base to point at the real services.
     """
     relays = []
-    for priority, relay_name in enumerate(relay_list):
+    # Mirror main.star's relay dispatch loop: relay_index increments for every
+    # non-"none" relay, and each helix/flashbots/mev-rs service is launched with
+    # index = participant_count + relay_index. We reuse that suffix verbatim so
+    # the rbuilder Service names resolve to the actual launched services.
+    relay_index = 0
+    for relay_name in relay_list:
         if relay_name == "none":
             continue
         elif relay_name == "flashbots":
@@ -96,19 +107,22 @@ def new_builder_config_template_data(
                     "Name": "flashbots",
                     "Service": "mev-relay-api",
                     "Port": flashbots_relay.MEV_RELAY_ENDPOINT_PORT,
-                    "Priority": priority,
+                    "Priority": relay_index,
                 }
             )
         elif relay_name == "helix":
+            suffix = participant_count + relay_index
             relays.append(
                 {
-                    "Name": "helix",
-                    "Service": "helix-relay",
+                    "Name": "helix-{}".format(suffix),
+                    "Service": "helix-relay-{}".format(suffix),
                     "Port": helix_relay.HELIX_RELAY_ENDPOINT_PORT,
-                    "Priority": priority,
+                    "Priority": relay_index,
                 }
             )
-        # mev-rs relay is not supported in rbuilder config (different protocol)
+        # mev-rs relay is not supported in rbuilder config (different protocol),
+        # but it still consumes a relay_index slot in main.star's loop.
+        relay_index += 1
 
     # Build enabled_relays string for the config: "relay1", "relay2"
     enabled_relays = ", ".join(['"{}"'.format(r["Name"]) for r in relays])
