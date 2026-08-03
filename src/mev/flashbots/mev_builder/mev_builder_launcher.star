@@ -127,6 +127,27 @@ def new_builder_config_template_data(
     # Build enabled_relays string for the config: "relay1", "relay2"
     enabled_relays = ", ".join(['"{}"'.format(r["Name"]) for r in relays])
 
+    # Per-relay subsidy: `mev_builder_subsidy` may be a scalar (one value for
+    # every relay — the historical shape) or a LIST (positional per-relay values,
+    # e.g. [1, 2] gives relay 0 subsidy 1 and relay 1 subsidy 2). rbuilder
+    # supports this natively via top-level `[[subsidy_overrides]]` entries that
+    # name-match a `[[relays]]` block — each override gets its own sealed bid of
+    # true_block_value + subsidy, which is how two relays receive DIVERGENT bid
+    # values from one builder (the non-degenerate best-bid competition setup).
+    # List shape: global `subsidy` = list[0]; relays 1..n get an override with
+    # their own value. Relays beyond the list length fall back to the global.
+    if type(subsidy) == "list":
+        if len(subsidy) == 0:
+            fail("mev_builder_subsidy: empty list; use a scalar or per-relay values")
+        global_subsidy = subsidy[0]
+        subsidy_overrides = [
+            {"Name": relays[i]["Name"], "Value": subsidy[i]}
+            for i in range(1, min(len(subsidy), len(relays)))
+        ]
+    else:
+        global_subsidy = subsidy
+        subsidy_overrides = []
+
     return {
         "Network": network_params.network
         if network_params.network in constants.PUBLIC_NETWORKS
@@ -146,5 +167,6 @@ def new_builder_config_template_data(
         "Mnemonic": mnemonic,
         "FeeRecipient": fee_recipient,
         "ExtraData": extra_data,
-        "Subsidy": subsidy,
+        "Subsidy": global_subsidy,
+        "SubsidyOverrides": subsidy_overrides,
     }
