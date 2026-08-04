@@ -862,6 +862,9 @@ def input_parser(plan, input_args):
             run_multiple_relays=result["mev_params"]["run_multiple_relays"],
             helix_relay_image=result["mev_params"]["helix_relay_image"],
             commit_boost_config=result["mev_params"].get("commit_boost_config", ""),
+            commit_boost_signer=result["mev_params"].get(
+                "commit_boost_signer", False
+            ),
             helix_relay_config=result["mev_params"].get("helix_relay_config", ""),
             mev_relay=result["mev_params"].get("mev_relay"),
             mev_sidecar=result["mev_params"].get("mev_sidecar"),
@@ -1936,6 +1939,8 @@ def get_default_mev_params(mev_type, preset):
         "run_multiple_relays": False,
         "helix_relay_image": constants.DEFAULT_HELIX_RELAY_IMAGE,
         "commit_boost_config": "",
+        # Opt-in: launch a Commit-Boost SIGNER container beside the PBS sidecar.
+        "commit_boost_signer": False,
         "helix_relay_config": "",
         "mev_relay": None,
         "mev_sidecar": None,

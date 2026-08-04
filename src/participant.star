@@ -12,6 +12,7 @@ def new_participant(
     snooper_el_rpc_context,
     ethereum_metrics_exporter_context,
     xatu_sentry_context,
+    node_keystore_files,
 ):
     return struct(
         el_type=el_type,
@@ -27,4 +28,9 @@ def new_participant(
         snooper_el_rpc_context=snooper_el_rpc_context,
         ethereum_metrics_exporter_context=ethereum_metrics_exporter_context,
         xatu_sentry_context=xatu_sentry_context,
+        # The per-participant validator-keystore artifact. Carried so sidecars
+        # launched from main.star (the CB signer) can mount the SAME keys the VC
+        # uses, without regenerating any key material. None when the participant
+        # has no validators.
+        node_keystore_files=node_keystore_files,
     )

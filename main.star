@@ -36,6 +36,9 @@ tempo = import_module("./src/tempo/tempo_launcher.star")
 commit_boost_mev_boost = import_module(
     "./src/mev/commit-boost/mev_boost/mev_boost_launcher.star"
 )
+commit_boost_signer = import_module(
+    "./src/mev/commit-boost/signer/signer_launcher.star"
+)
 mev_rs_mev_boost = import_module("./src/mev/mev-rs/mev_boost/mev_boost_launcher.star")
 mev_rs_mev_relay = import_module("./src/mev/mev-rs/mev_relay/mev_relay_launcher.star")
 mev_rs_mev_builder = import_module(
@@ -548,6 +551,32 @@ def run(plan, args={}):
                         global_tolerations,
                         final_genesis_timestamp,
                     )
+
+                    # The Commit-Boost SIGNER module, opt-in via
+                    # mev_params.commit_boost_signer. Launched HERE (not beside
+                    # the web3signer in participant_network) because this is the
+                    # only scope holding the keystores, the genesis artifact,
+                    # the relay endpoints and the genesis timestamp at once.
+                    # The service name is deliberately OUTSIDE the
+                    # "commit-boost-*" glob: cb-testing's discovery sweeps that
+                    # pattern into cb_service_names, and three checks then shell
+                    # out a 200k-line `kurtosis service logs` per name.
+                    if mev_params.commit_boost_signer:
+                        plan.print("Launching commit-boost SIGNER service")
+                        commit_boost_signer.launch(
+                            plan,
+                            "cb-signer-{0}-{1}-{2}".format(
+                                index_str, participant.cl_type, participant.el_type
+                            ),
+                            mev_params,
+                            participant.node_keystore_files,
+                            el_cl_data_files_artifact_uuid,
+                            final_genesis_timestamp,
+                            network_params.network,
+                            mev_endpoints,
+                            global_node_selectors,
+                            index,
+                        )
                 elif mev_components.sidecar == "mev-rs":
                     plan.print("Launching mev-rs mev boost")
                     mev_boost_launcher = mev_rs_mev_boost.new_mev_boost_launcher(
