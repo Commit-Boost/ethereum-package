@@ -58,7 +58,7 @@ def launch(
     service_name,
     mev_params,
     node_keystore_files,
-    el_cl_genesis_data,
+    el_cl_genesis_data_artifact_uuid,
     final_genesis_timestamp,
     network,
     relay_endpoints,
@@ -101,7 +101,11 @@ def launch(
         ports=SIGNER_USED_PORTS,
         files={
             SIGNER_CONFIG_MOUNTPOINT: config_artifact,
-            constants.GENESIS_DATA_MOUNTPOINT_ON_CLIENTS: el_cl_genesis_data.files_artifact_uuid,
+            # NOTE: main.star passes the artifact UUID directly (a string), not
+            # the el_cl_genesis_data STRUCT that the web3signer launcher receives.
+            # Copying that launcher's `.files_artifact_uuid` accessor cost one
+            # devnet run: "string has no .files_artifact_uuid field or method".
+            constants.GENESIS_DATA_MOUNTPOINT_ON_CLIENTS: el_cl_genesis_data_artifact_uuid,
             SIGNER_KEYS_MOUNTPOINT: node_keystore_files.files_artifact_uuid,
         },
         env_vars={
