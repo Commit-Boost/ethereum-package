@@ -862,6 +862,9 @@ def input_parser(plan, input_args):
             run_multiple_relays=result["mev_params"]["run_multiple_relays"],
             helix_relay_image=result["mev_params"]["helix_relay_image"],
             commit_boost_config=result["mev_params"].get("commit_boost_config", ""),
+            commit_boost_extra_files=result["mev_params"].get(
+                "commit_boost_extra_files", {}
+            ),
             commit_boost_signer=result["mev_params"].get(
                 "commit_boost_signer", False
             ),
@@ -1939,6 +1942,11 @@ def get_default_mev_params(mev_type, preset):
         "run_multiple_relays": False,
         "helix_relay_image": constants.DEFAULT_HELIX_RELAY_IMAGE,
         "commit_boost_config": "",
+        # Extra files rendered into the Commit-Boost /config artifact next to
+        # cb-config.toml, keyed by filename: a relay API key the config reads via
+        # `headers = { X-Api-Key = { file = "/config/<name>" } }` instead of
+        # carrying it inline.
+        "commit_boost_extra_files": {},
         # Opt-in: launch a Commit-Boost SIGNER container beside the PBS sidecar.
         "commit_boost_signer": False,
         "helix_relay_config": "",

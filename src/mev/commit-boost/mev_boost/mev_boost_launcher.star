@@ -76,6 +76,19 @@ def launch(
 
     template_and_data_by_rel_dest_filepath = {}
     template_and_data_by_rel_dest_filepath[CB_CONFIG_FILENAME] = template_and_data
+    # Extra files land in the same artifact, so `/config/<name>` is readable by
+    # the sidecar exactly like cb-config.toml (e.g. a relay API key the config
+    # references with `{ file = "/config/<name>" }`). Contents are rendered as
+    # templates like the config itself, so a `{{` in a value is substituted.
+    for filename, content in mev_params.commit_boost_extra_files.items():
+        if filename == CB_CONFIG_FILENAME:
+            fail(
+                "commit_boost_extra_files must not use the reserved name "
+                + CB_CONFIG_FILENAME
+            )
+        template_and_data_by_rel_dest_filepath[
+            filename
+        ] = shared_utils.new_template_and_data(content, template_data)
 
     config_files_artifact_name = plan.render_templates(
         template_and_data_by_rel_dest_filepath,

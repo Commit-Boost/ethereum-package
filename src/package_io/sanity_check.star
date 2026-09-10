@@ -379,6 +379,7 @@ SUBCATEGORY_PARAMS = {
         "run_multiple_relays",
         "helix_relay_image",
         "commit_boost_config",
+        "commit_boost_extra_files",
         "commit_boost_signer",
         "helix_relay_config",
         "mev_relay",
