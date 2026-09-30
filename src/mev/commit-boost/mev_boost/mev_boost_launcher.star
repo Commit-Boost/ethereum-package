@@ -8,10 +8,15 @@ CB_CONFIG_FILENAME = "cb-config.toml"
 CB_CONFIG_MOUNT_DIRPATH_ON_SERVICE = "/config"
 CB_CONFIG_FILES_ARTIFACT_NAME = "commit-boost-config"
 
+CB_METRICS_PORT = 9090
+
 USED_PORTS = {
     "http": shared_utils.new_port_spec(
         constants.MEV_BOOST_PORT, shared_utils.TCP_PROTOCOL
-    )
+    ),
+    "metrics": shared_utils.new_port_spec(
+        CB_METRICS_PORT, shared_utils.TCP_PROTOCOL, wait="15s"
+    ),
 }
 
 # The min/max CPU/memory that mev-boost can use
@@ -116,6 +121,8 @@ def get_config(
         cmd=[],
         env_vars={
             "CB_CONFIG": config_file_path,
+            # commit-boost serves prometheus metrics only when this is set
+            "CB_METRICS_PORT": str(CB_METRICS_PORT),
         },
         files={
             CB_CONFIG_MOUNT_DIRPATH_ON_SERVICE: config_file,
