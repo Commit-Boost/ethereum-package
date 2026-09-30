@@ -6,7 +6,7 @@ static_files = import_module("../../static_files/static_files.star")
 
 HELIX_RELAY_NAME = "helix-relay"
 
-HTTP_PORT_ID = "http"
+ADMIN_PORT_ID = "admin"
 ENDPOINT_PORT_ID = "endpoint"
 
 HELIX_RELAY_CONFIG_FILENAME = "config.yaml"
@@ -14,18 +14,22 @@ HELIX_RELAY_MOUNT_DIRPATH_ON_SERVICE = "/config/"
 HELIX_RELAY_FILES_ARTIFACT_NAME = "helix-relay-config"
 
 HELIX_RELAY_ENDPOINT_PORT = 4040
+HELIX_RELAY_ADMIN_PORT = 4050
 HELIX_RELAY_WEBSITE_PORT = 9060
 
 USED_PORTS = {
+    # the relay waits for genesis before it listens, so give the port check room
     ENDPOINT_PORT_ID: shared_utils.new_port_spec(
         HELIX_RELAY_ENDPOINT_PORT,
         shared_utils.TCP_PROTOCOL,
         shared_utils.HTTP_APPLICATION_PROTOCOL,
+        wait="60s",
     ),
-    HTTP_PORT_ID: shared_utils.new_port_spec(
-        HELIX_RELAY_WEBSITE_PORT,
+    ADMIN_PORT_ID: shared_utils.new_port_spec(
+        HELIX_RELAY_ADMIN_PORT,
         shared_utils.TCP_PROTOCOL,
         shared_utils.HTTP_APPLICATION_PROTOCOL,
+        wait="60s",
     ),
 }
 
@@ -33,7 +37,8 @@ USED_PORTS = {
 RELAY_MIN_CPU = 500
 RELAY_MAX_CPU = 3000
 RELAY_MIN_MEMORY = 256
-RELAY_MAX_MEMORY = 4096
+RELAY_MAX_MEMORY = 8192  # 4096 OOM-killed the relay ~9 min into a spamoor devnet
+RELAY_SHM_SIZE_MB = 2048
 
 # The min/max CPU/memory that postgres can use
 POSTGRES_MIN_CPU = 10
@@ -67,13 +72,13 @@ def launch_helix_relay(
         0,
     )
     public_ports.update(endpoint_public_port)
-    website_public_port = shared_utils.get_mev_public_port(
+    admin_public_port = shared_utils.get_mev_public_port(
         port_publisher,
-        HTTP_PORT_ID,
+        ADMIN_PORT_ID,
         index,
         1,
     )
-    public_ports.update(website_public_port)
+    public_ports.update(admin_public_port)
 
     node_selectors = global_node_selectors
 
@@ -132,6 +137,11 @@ def launch_helix_relay(
 
     env_vars = {
         "RELAY_KEY": constants.DEFAULT_MEV_SECRET_KEY,
+        # current helix reads both at startup and panics without them
+        "POSTGRES_PASSWORD": "postgres",
+        "ADMIN_TOKEN": "admin_token",
+        # read by the entrypoint wrapper below
+        "GENESIS_TIME": str(genesis_timestamp),
     }
 
     # Use provided relay_image if available, otherwise use mev_params.mev_relay_image
@@ -141,7 +151,14 @@ def launch_helix_relay(
         name=HELIX_RELAY_NAME,
         config=ServiceConfig(
             image=helix_image,
-            cmd=["--config", config_file_path],
+            # helix computes the current slot at boot and panics before genesis,
+            # so hold it until genesis
+            entrypoint=["sh", "-c"],
+            cmd=[
+                'until [ "$(date +%s)" -ge "$GENESIS_TIME" ]; do sleep 1; done; '
+                + "exec /app/helix-relay --config "
+                + config_file_path,
+            ],
             files={
                 HELIX_RELAY_MOUNT_DIRPATH_ON_SERVICE: config_files_artifact_name,
                 constants.GENESIS_DATA_MOUNTPOINT_ON_CLIENTS: el_cl_genesis_data,
@@ -153,6 +170,10 @@ def launch_helix_relay(
             max_cpu=RELAY_MAX_CPU,
             min_memory=RELAY_MIN_MEMORY,
             max_memory=RELAY_MAX_MEMORY,
+            # helix runs its tiles over /dev/shm queues, and docker's 64MB default
+            # SIGBUSes it (exit 135) a few slots in. shm_size lives on GpuConfig;
+            # count stays 0, so no GPU is requested.
+            gpu=GpuConfig(shm_size=RELAY_SHM_SIZE_MB),
             node_selectors=node_selectors,
             tolerations=tolerations,
         ),
