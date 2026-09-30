@@ -35,6 +35,7 @@ USED_PORTS = {
 RELAY_MIN_CPU = 500
 RELAY_MAX_CPU = 3000
 RELAY_MIN_MEMORY = 256
+RELAY_SHM_SIZE_MB = 2048
 RELAY_MAX_MEMORY = 8192  # raised from 4096: both relays OOM-killed at their 4GB cgroup cap ~9min into a spamoor devnet (CONSTRAINT_MEMCG)
 
 # The min/max CPU/memory that postgres can use
@@ -160,6 +161,10 @@ def launch_helix_relay(
             max_cpu=RELAY_MAX_CPU,
             min_memory=RELAY_MIN_MEMORY,
             max_memory=RELAY_MAX_MEMORY,
+            # helix runs its tiles over /dev/shm queues, and docker's 64MB default
+            # SIGBUSes it (exit 135) a few slots in. shm_size lives on GpuConfig;
+            # count stays 0, so no GPU is requested.
+            gpu=GpuConfig(shm_size=RELAY_SHM_SIZE_MB),
             node_selectors=node_selectors,
             tolerations=tolerations,
         ),
