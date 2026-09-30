@@ -105,7 +105,11 @@ def launch_helix_relay(
     )
 
     # Read the helix config template
-    helix_config_template = read_file(static_files.HELIX_RELAY_CONFIG_FILEPATH)
+    # An inline config in mev_params replaces the static template
+    if mev_params.helix_relay_config:
+        helix_config_template = mev_params.helix_relay_config
+    else:
+        helix_config_template = read_file(static_files.HELIX_RELAY_CONFIG_FILEPATH)
     template_and_data = shared_utils.new_template_and_data(
         helix_config_template, helix_template_data
     )

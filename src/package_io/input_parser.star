@@ -1064,6 +1064,7 @@ def input_parser(plan, input_args):
                     "mev_builder_prometheus_config"
                 ],
                 mock_mev_image=result["mev_params"]["mock_mev_image"],
+                helix_relay_config=result["mev_params"].get("helix_relay_config", ""),
                 launch_adminer=result["mev_params"]["launch_adminer"],
                 run_multiple_relays=result["mev_params"]["run_multiple_relays"],
                 helix_relay_image=result["mev_params"]["helix_relay_image"],
