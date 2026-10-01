@@ -163,8 +163,10 @@ def get_config(
 
     # Handle bootnode configuration with bootnodoor_el_enr override
     if launcher.builder_type:
-        # reth-rbuilder's reth predates ENR support in --bootnodes, so the
-        # builder dials its peers by enode
+        # reth-rbuilder's reth predates ENR support in --bootnodes and finds
+        # bootnodes over discv4 only, which a discv5-only peer (nethermind)
+        # never answers. Dial the peers directly by enode so the builder joins
+        # the EL network, and its mempool, whatever discovery the peers run.
         bootnode_arg = el_shared.get_bootnode_enode_arg(
             plan,
             launcher,
@@ -173,6 +175,16 @@ def get_config(
             None,
             "--bootnodes=",
         )
+        trusted_peers_arg = el_shared.get_bootnode_enode_arg(
+            plan,
+            launcher,
+            network_params.network,
+            existing_el_clients,
+            None,
+            "--trusted-peers=",
+        )
+        if trusted_peers_arg != None:
+            cmd.append(trusted_peers_arg)
     else:
         bootnode_arg = el_shared.get_bootnode_arg(
             plan,
