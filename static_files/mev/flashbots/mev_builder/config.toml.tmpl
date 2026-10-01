@@ -32,6 +32,13 @@ root_hash_compare_sparse_trie=false
 subsidy = "{{ .Subsidy }}"
 {{- end }}
 
+{{- range $o := .SubsidyOverrides }}
+
+[[subsidy_overrides]]
+relay = "{{ $o.Name }}"
+value = "{{ $o.Value }}"
+{{- end }}
+
 {{ range $relay := .Relays }}
 [[relays]]
 name = "{{ $relay.Name }}"

@@ -144,6 +144,23 @@ def new_builder_config_template_data(
     # Build enabled_relays string for the config: "relay1", "relay2"
     enabled_relays = ", ".join(['"{}"'.format(r["Name"]) for r in relays])
 
+    # A list gives each relay its own subsidy, so relays receive different bids
+    # for the same block: the first value is the global subsidy, the rest become
+    # rbuilder subsidy_overrides for the relays in order.
+    subsidy_overrides = []
+    if type(subsidy) == "list":
+        if len(subsidy) == 0 or len(subsidy) > len(relays):
+            fail(
+                "mev_builder_subsidy: a list needs 1 to {0} values, one per relay, got {1}".format(
+                    len(relays), len(subsidy)
+                )
+            )
+        subsidy_overrides = [
+            {"Name": relays[i]["Name"], "Value": subsidy[i]}
+            for i in range(1, len(subsidy))
+        ]
+        subsidy = subsidy[0]
+
     return {
         "Network": network_params.network
         if network_params.network in constants.PUBLIC_NETWORKS
@@ -164,4 +181,5 @@ def new_builder_config_template_data(
         "FeeRecipient": fee_recipient,
         "ExtraData": extra_data,
         "Subsidy": subsidy,
+        "SubsidyOverrides": subsidy_overrides,
     }
