@@ -382,6 +382,7 @@ SUBCATEGORY_PARAMS = {
         "mock_mev_image",
         "launch_adminer",
         "run_multiple_relays",
+        "mev_relays",
         "helix_relay_image",
         "helix_relay_config",
         "commit_boost_config",

@@ -721,8 +721,49 @@ def run(plan, args={}):
         first_cl_client = all_cl_contexts[0]
         first_client_beacon_name = first_cl_client.beacon_service_name
 
+        # mev_relays replaces the per-mev_type relay set. Relay i gets index
+        # num_participants + i, which the rbuilder config mirrors to address it.
+        if mev_params.mev_relays:
+            for relay_index, relay_kind in enumerate(mev_params.mev_relays):
+                index = num_participants + relay_index
+                if relay_kind == constants.FLASHBOTS_MEV_TYPE:
+                    endpoint = flashbots_mev_relay.launch_mev_relay(
+                        plan,
+                        mev_params,
+                        network_id,
+                        beacon_uri,
+                        genesis_validators_root,
+                        blocksim_uri,
+                        network_params,
+                        persistent,
+                        args_with_right_defaults.port_publisher,
+                        index,
+                        global_node_selectors,
+                        global_tolerations,
+                        builder_cl_context.beacon_service_name,
+                    )
+                else:
+                    endpoint = helix_relay.launch_helix_relay(
+                        plan,
+                        network_params,
+                        mev_params,
+                        beacon_uri,
+                        genesis_validators_root,
+                        final_genesis_timestamp,
+                        blocksim_uri,
+                        persistent,
+                        args_with_right_defaults.port_publisher,
+                        index,
+                        global_node_selectors,
+                        global_tolerations,
+                        el_cl_data_files_artifact_uuid,
+                        mev_params.helix_relay_image,
+                        name_suffix="-{0}".format(index),
+                    )
+                mev_endpoints.append(endpoint)
+                mev_endpoint_names.append(relay_kind)
         # Check if we should run multiple relays (flashbots + helix)
-        if mev_params.run_multiple_relays:
+        elif mev_params.run_multiple_relays:
             plan.print("Launching multiple MEV relays (flashbots + helix)")
             # Launch flashbots relay first
             flashbots_endpoint = flashbots_mev_relay.launch_mev_relay(

@@ -233,6 +233,7 @@ mev_params:
     scrape_interval: 15s
     labels: {}
   run_multiple_relays: false
+  mev_relays: []
   helix_relay_image: ghcr.io/gattaca-com/helix-relay:main
   commit_boost_config: ""
 buildoor_params:

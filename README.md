@@ -1601,6 +1601,12 @@ mev_params:
   # The reth-rbuilder will submit bids to both relays and mev-boost will query both relays for bids
   # Works with mev_type: flashbots
   run_multiple_relays: false
+  # The exact relays to launch, in order, e.g. [helix, helix]. Replaces the relay that
+  # mev_type or run_multiple_relays would launch. Supported kinds: flashbots (at most once), helix.
+  # Relay i gets index (participant count, builder included, + i); a helix relay is named
+  # helix-relay-<index> and runs helix_relay_image.
+  # Works with mev_type: flashbots, commit-boost or helix
+  mev_relays: []
   # The image to use for helix relay (used when run_multiple_relays is true or mev_type is helix)
   helix_relay_image: ghcr.io/gattaca-com/helix-relay:main
   # Inline Commit-Boost config template. When set, replaces the default auto-generated

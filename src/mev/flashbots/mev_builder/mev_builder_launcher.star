@@ -39,6 +39,8 @@ def new_builder_config(
         mev_params.mev_builder_subsidy,
         mev_type,
         mev_params.run_multiple_relays,
+        mev_params.mev_relays,
+        len(participants),
     )
     flashbots_builder_config_template = read_file(
         static_files.FLASHBOTS_RBUILDER_CONFIG_FILEPATH
@@ -75,11 +77,34 @@ def new_builder_config_template_data(
     subsidy,
     mev_type,
     run_multiple_relays=False,
+    mev_relays=[],
+    participant_count=0,
 ):
     # Build the list of relays based on configuration
     relays = []
 
-    if run_multiple_relays:
+    if mev_relays:
+        # main.star launches relay i at index participant_count + i and names a
+        # helix relay by that index, so each entry must use the same index
+        for relay_index, relay_kind in enumerate(mev_relays):
+            index = participant_count + relay_index
+            if relay_kind == constants.FLASHBOTS_MEV_TYPE:
+                name = "flashbots"
+                service = "mev-relay-api"
+                port = flashbots_relay.MEV_RELAY_ENDPOINT_PORT
+            else:
+                name = "helix-{0}".format(index)
+                service = "{0}-{1}".format(helix_relay.HELIX_RELAY_NAME, index)
+                port = helix_relay.HELIX_RELAY_ENDPOINT_PORT
+            relays.append(
+                {
+                    "Name": name,
+                    "Service": service,
+                    "Port": port,
+                    "Priority": relay_index,
+                }
+            )
+    elif run_multiple_relays:
         # Add both flashbots and helix relays
         relays.append(
             {

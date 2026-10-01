@@ -62,7 +62,11 @@ def launch_helix_relay(
     global_tolerations,
     el_cl_genesis_data,
     relay_image=None,
+    name_suffix="",
 ):
+    # name_suffix keeps several helix relays in one enclave from colliding on
+    # service and artifact names
+    service_name = HELIX_RELAY_NAME + name_suffix
     tolerations = shared_utils.get_tolerations(global_tolerations=global_tolerations)
     public_ports = {}
     endpoint_public_port = shared_utils.get_mev_public_port(
@@ -87,7 +91,7 @@ def launch_helix_relay(
         password="postgres",
         user="postgres",
         database="postgres",
-        service_name="helix-relay-postgres",
+        service_name="helix-relay-postgres" + name_suffix,
         image="timescale/timescaledb:latest-pg15",
         persistent=persistent,
         launch_adminer=mev_params.launch_adminer,
@@ -107,6 +111,7 @@ def launch_helix_relay(
         beacon_uris,
         genesis_validators_root,
         postgres,
+        service_name,
     )
 
     # Read the helix config template
@@ -127,7 +132,8 @@ def launch_helix_relay(
 
     # Render the configuration file
     config_files_artifact_name = plan.render_templates(
-        template_and_data_by_rel_dest_filepath, HELIX_RELAY_FILES_ARTIFACT_NAME
+        template_and_data_by_rel_dest_filepath,
+        HELIX_RELAY_FILES_ARTIFACT_NAME + name_suffix,
     )
 
     # Path where config file will be mounted in container
@@ -148,7 +154,7 @@ def launch_helix_relay(
     helix_image = relay_image if relay_image else mev_params.mev_relay_image
 
     endpoint = plan.add_service(
-        name=HELIX_RELAY_NAME,
+        name=service_name,
         config=ServiceConfig(
             image=helix_image,
             # helix computes the current slot at boot and panics before genesis,
@@ -191,6 +197,7 @@ def new_helix_relay_config_template_data(
     beacon_uris,
     genesis_validators_root,
     postgres,
+    service_name,
 ):
     return {
         "NETWORK_NAME": network_params.network,
@@ -205,7 +212,9 @@ def new_helix_relay_config_template_data(
         "POSTGRES_PASS": "postgres",
         "HELIX_RELAY_ENDPOINT_PORT": HELIX_RELAY_ENDPOINT_PORT,
         "HELIX_RELAY_WEBSITE_PORT": HELIX_RELAY_WEBSITE_PORT,
-        "HELIX_RELAY_ENDPOINT_URL": "helix-relay:{}".format(HELIX_RELAY_ENDPOINT_PORT),
+        "HELIX_RELAY_ENDPOINT_URL": "{}:{}".format(
+            service_name, HELIX_RELAY_ENDPOINT_PORT
+        ),
         "HELIX_RELAY_PUBKEY": constants.DEFAULT_MEV_PUBKEY,
         "GENESIS_CONFIG_MOUNT_PATH_ON_CONTAINER": constants.GENESIS_DATA_MOUNTPOINT_ON_CLIENTS,
     }

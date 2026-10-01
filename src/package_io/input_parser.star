@@ -361,6 +361,36 @@ def input_parser(plan, input_args):
         # main.star) to avoid colliding with validator/genesis-builder keys.
         result = enrich_buildoor_per_participant(result)
 
+    mev_relays = result["mev_params"].get("mev_relays", [])
+    if mev_relays:
+        if type(mev_relays) != "list":
+            fail("mev_relays must be a list of relay kinds, e.g. [helix, helix]")
+        if result["mev_type"] not in (
+            constants.FLASHBOTS_MEV_TYPE,
+            constants.COMMIT_BOOST_MEV_TYPE,
+            constants.HELIX_MEV_TYPE,
+        ):
+            fail(
+                "mev_relays needs mev_type flashbots, commit-boost or helix, got {0}".format(
+                    result["mev_type"]
+                )
+            )
+        if result["mev_params"].get("run_multiple_relays"):
+            fail("mev_relays replaces run_multiple_relays, set only one of them")
+        for relay_kind in mev_relays:
+            if relay_kind not in (
+                constants.FLASHBOTS_MEV_TYPE,
+                constants.HELIX_MEV_TYPE,
+            ):
+                fail(
+                    "Unsupported relay kind {0} in mev_relays, supported: flashbots, helix".format(
+                        relay_kind
+                    )
+                )
+        # the flashbots relay stack has fixed service names
+        if len([r for r in mev_relays if r == constants.FLASHBOTS_MEV_TYPE]) > 1:
+            fail("mev_relays can list flashbots at most once")
+
     if (
         result["mev_params"].get("mev_builder_subsidy") != 0
         and result["network_params"].get("prefunded_accounts") == {}
@@ -1067,6 +1097,7 @@ def input_parser(plan, input_args):
                 helix_relay_config=result["mev_params"].get("helix_relay_config", ""),
                 launch_adminer=result["mev_params"]["launch_adminer"],
                 run_multiple_relays=result["mev_params"]["run_multiple_relays"],
+                mev_relays=result["mev_params"]["mev_relays"],
                 helix_relay_image=result["mev_params"]["helix_relay_image"],
                 commit_boost_config=result["mev_params"].get("commit_boost_config", ""),
             )
@@ -2314,6 +2345,7 @@ def get_default_mev_params(mev_type, preset):
         "mev_builder_prometheus_config": mev_builder_prometheus_config,
         "launch_adminer": launch_adminer,
         "run_multiple_relays": False,
+        "mev_relays": [],
         "helix_relay_image": constants.DEFAULT_HELIX_RELAY_IMAGE,
         "commit_boost_config": "",
     }
