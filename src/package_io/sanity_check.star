@@ -386,6 +386,7 @@ SUBCATEGORY_PARAMS = {
         "helix_relay_image",
         "helix_relay_config",
         "commit_boost_config",
+        "commit_boost_extra_files",
     ],
     "xatu_sentry_params": [
         "xatu_sentry_image",

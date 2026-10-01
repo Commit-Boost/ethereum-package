@@ -1100,6 +1100,9 @@ def input_parser(plan, input_args):
                 mev_relays=result["mev_params"]["mev_relays"],
                 helix_relay_image=result["mev_params"]["helix_relay_image"],
                 commit_boost_config=result["mev_params"].get("commit_boost_config", ""),
+                commit_boost_extra_files=result["mev_params"].get(
+                    "commit_boost_extra_files", {}
+                ),
             )
             if result["mev_params"]
             else None
@@ -2348,6 +2351,11 @@ def get_default_mev_params(mev_type, preset):
         "mev_relays": [],
         "helix_relay_image": constants.DEFAULT_HELIX_RELAY_IMAGE,
         "commit_boost_config": "",
+        # Extra files rendered into the Commit-Boost /config artifact next to
+        # cb-config.toml, keyed by filename: a relay API key the config reads via
+        # `headers = { X-Api-Key = { file = "/config/<name>" } }` instead of
+        # carrying it inline.
+        "commit_boost_extra_files": {},
     }
 
 
