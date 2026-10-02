@@ -112,7 +112,7 @@ def launch(
     mev_boost_service = plan.add_service(service_name, config)
 
     return mev_boost_context_module.new_mev_boost_context(
-        mev_boost_service.name, constants.MEV_BOOST_PORT
+        mev_boost_service.name, constants.MEV_BOOST_PORT, config_files_artifact_name
     )
 
 

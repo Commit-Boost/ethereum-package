@@ -711,6 +711,9 @@ def launch_participant_network(
             snooper_el_rpc_context,
             ethereum_metrics_exporter_context,
             xatu_sentry_context,
+            preregistered_validator_keys_for_nodes[index]
+            if preregistered_validator_keys_for_nodes != None
+            else None,
         )
 
         all_participants.append(participant_entry)

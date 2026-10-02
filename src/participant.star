@@ -12,6 +12,7 @@ def new_participant(
     snooper_el_rpc_context,
     ethereum_metrics_exporter_context,
     xatu_sentry_context,
+    node_keystore_files,
 ):
     return struct(
         el_type=el_type,
@@ -27,4 +28,8 @@ def new_participant(
         snooper_el_rpc_context=snooper_el_rpc_context,
         ethereum_metrics_exporter_context=ethereum_metrics_exporter_context,
         xatu_sentry_context=xatu_sentry_context,
+        # The participant's validator keystores (None when it has none), so a
+        # service launched after the network, like the Commit-Boost signer, can
+        # mount the keys the validator client uses.
+        node_keystore_files=node_keystore_files,
     )

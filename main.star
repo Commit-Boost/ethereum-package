@@ -30,6 +30,9 @@ tempo = import_module("./src/tempo/tempo_launcher.star")
 commit_boost_mev_boost = import_module(
     "./src/mev/commit-boost/mev_boost/mev_boost_launcher.star"
 )
+commit_boost_signer = import_module(
+    "./src/mev/commit-boost/signer/signer_launcher.star"
+)
 mev_rs_mev_boost = import_module("./src/mev/mev-rs/mev_boost/mev_boost_launcher.star")
 mev_rs_mev_relay = import_module("./src/mev/mev-rs/mev_relay/mev_relay_launcher.star")
 mev_rs_mev_builder = import_module(
@@ -1038,6 +1041,26 @@ def run(plan, args={}):
                         global_tolerations,
                         final_genesis_timestamp,
                     )
+                    # Launched here rather than with the participant's other
+                    # services because it mounts the sidecar's rendered config.
+                    if mev_params.commit_boost_signer:
+                        plan.print("Launching commit-boost signer service")
+                        commit_boost_signer.launch(
+                            plan,
+                            "{0}-{1}-{2}-{3}".format(
+                                constants.COMMIT_BOOST_SIGNER_SERVICE_NAME_PREFIX,
+                                index_str,
+                                participant.cl_type,
+                                participant.el_type,
+                            ),
+                            mev_params,
+                            mev_boost_context.config_files_artifact,
+                            participant.node_keystore_files,
+                            el_cl_data_files_artifact_uuid,
+                            index,
+                            global_node_selectors,
+                            global_tolerations,
+                        )
                 else:
                     fail("Invalid MEV type")
                 all_mevboost_contexts.append(mev_boost_context)

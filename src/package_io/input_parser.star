@@ -1103,6 +1103,9 @@ def input_parser(plan, input_args):
                 commit_boost_extra_files=result["mev_params"].get(
                     "commit_boost_extra_files", {}
                 ),
+                commit_boost_signer=result["mev_params"].get(
+                    "commit_boost_signer", False
+                ),
             )
             if result["mev_params"]
             else None
@@ -2356,6 +2359,9 @@ def get_default_mev_params(mev_type, preset):
         # `headers = { X-Api-Key = { file = "/config/<name>" } }` instead of
         # carrying it inline.
         "commit_boost_extra_files": {},
+        # Launch a Commit-Boost signer beside each PBS sidecar, holding that
+        # participant's validator keys.
+        "commit_boost_signer": False,
     }
 
 

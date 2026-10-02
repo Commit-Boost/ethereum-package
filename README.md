@@ -1627,6 +1627,13 @@ mev_params:
   #     [logs.stdout]
   #     level = "debug"
   commit_boost_config: ""
+  # Launch a Commit-Boost signer (cb-signer-<index>-<cl>-<el>) beside each commit-boost
+  # sidecar, loading that participant's validator keystores in teku format. It runs
+  # mev_boost_image with the `signer` command, so that must be the unified
+  # ghcr.io/commit-boost/commit-boost image, and it reads the sidecar's config, which must
+  # declare [signer] and a [[modules]] entry with id TEST_MODULE.
+  # Only used when mev_type is "commit-boost".
+  commit_boost_signer: false
 
 # Parameters for the buildoor builder service.
 # buildoor is an additional_service: add "buildoor" to additional_services to spin

@@ -145,6 +145,9 @@ DEFAULT_MEV_SECRET_KEY = (
 )
 MEV_BOOST_SERVICE_NAME_PREFIX = "mev-boost"
 COMMIT_BOOST_SERVICE_NAME_PREFIX = "commit-boost"
+# Outside the "commit-boost" prefix, so tooling that selects the PBS sidecars by
+# that prefix does not also pick up the signers.
+COMMIT_BOOST_SIGNER_SERVICE_NAME_PREFIX = "cb-signer"
 MEV_BOOST_PORT = 18550
 DEFAULT_MNEMONIC = "giant issue aisle success illegal bike spike question tent bar rely arctic volcano long crawl hungry vocal artwork sniff fantasy very lucky have athlete"
 DEFAULT_BUILDER_MNEMONIC = "baby envelope toddler valid pottery buddy cash spare such hedgehog ring ramp item seminar rely select advance knife cruel cereal left father model tissue"
